@@ -31,7 +31,7 @@ public class Main {
             clientSocket.getOutputStream().write(messageSizeBytes);
             var res = ByteBuffer.allocate(4).putInt(correlationId).array();
             clientSocket.getOutputStream().write(res);
-            clientSocket.getOutputStream().write(ByteBuffer.allocate(2).putInt(35).array());
+            clientSocket.getOutputStream().write(new byte[] {0, 35});
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
         } finally {
