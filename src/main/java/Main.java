@@ -25,13 +25,13 @@ public class Main {
             BufferedInputStream in = new BufferedInputStream(clientSocket.getInputStream());
             byte[] messageSizeBytes = in.readNBytes(4);
             int messageSize = ByteBuffer.wrap(messageSizeBytes).getInt();
-
             byte[] apiKey = in.readNBytes(2);
             byte[] apiVersion = in.readNBytes(2);
             int correlationId = ByteBuffer.wrap(in.readNBytes(4)).getInt();
             clientSocket.getOutputStream().write(messageSizeBytes);
             var res = ByteBuffer.allocate(4).putInt(correlationId).array();
             clientSocket.getOutputStream().write(res);
+            clientSocket.getOutputStream().write(ByteBuffer.allocate(2).putInt(35).array());
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
         } finally {
