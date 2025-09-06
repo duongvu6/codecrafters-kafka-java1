@@ -1,5 +1,6 @@
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -22,16 +23,21 @@ public class Main {
             serverSocket.setReuseAddress(true);
             // Wait for connection from client.
             clientSocket = serverSocket.accept();
-            BufferedInputStream in = new BufferedInputStream(clientSocket.getInputStream());
-            byte[] messageSizeBytes = in.readNBytes(4);
-            int messageSize = ByteBuffer.wrap(messageSizeBytes).getInt();
-            byte[] apiKey = in.readNBytes(2);
-            byte[] apiVersion = in.readNBytes(2);
-            int correlationId = ByteBuffer.wrap(in.readNBytes(4)).getInt();
-            clientSocket.getOutputStream().write(messageSizeBytes);
-            var res = ByteBuffer.allocate(4).putInt(correlationId).array();
-            clientSocket.getOutputStream().write(res);
-            clientSocket.getOutputStream().write(new byte[] {0, 35});
+            InputStream in = clientSocket.getInputStream();
+            OutputStream out = clientSocket.getOutputStream();
+
+            byte[] readBuffer = new byte[12];
+            in.read(readBuffer);
+            byte[] apiVersion = new byte[2];
+            System.arraycopy(readBuffer, 6, apiVersion, 0, 2);
+            byte[] correlationId = new byte[4];
+            System.arraycopy(readBuffer, 8, correlationId, 0, 4);
+            System.out.println(ByteBuffer.wrap(correlationId).getInt());
+            var messageSize = ByteBuffer.allocate(4).putInt(19).array();
+            out.write(messageSize);
+            out.write(correlationId);
+            out.write(apiVersion[0] != 0 || apiVersion[1] > 4 ? new byte[]{0, 35} : new byte[]{0, 0});
+            out.write(new byte[]{2, 00, 0x12, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0});
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
         } finally {
